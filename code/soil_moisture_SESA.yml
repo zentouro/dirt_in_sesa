@@ -13,6 +13,15 @@ dependencies:
   - scipy
   - xskillscore
 
+  ## download data 
+  - intake
+  - intake_esm
+  - gcsfs
+
+  ## missing intake dependencies?
+  - requests
+  - aiohttp
+
   # Plotting
   - matplotlib
   - cmocean
@@ -25,3 +34,4 @@ dependencies:
   # Aux
   - jupyterlab
   - tqdm
+  - ipywidgets
