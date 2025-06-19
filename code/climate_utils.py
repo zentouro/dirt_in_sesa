@@ -135,6 +135,7 @@ def area_mean(ds):
     
     return weighted_means
 
+
 def global_mean(ds):
     '''
     simplified and fast area weighting, relies on built in xarray functionaility 
@@ -150,6 +151,44 @@ def global_mean(ds):
 
     weighted_means = ds.weighted(weights).mean(dim = ['lat','lon'], keep_attrs = True)
     return weighted_means
+
+def fix_lons(ds, lon_range=180):
+    """
+    This function fixes a few issues that show up when dealing with 
+    longitude values. 
+    
+    Input: an xarray dataset, with a longitude dimension called "lon"
+    
+    Changes: 
+    - The dataset is re-indexed to -180:180 or 0:360 longitude format, 
+      depending on the subset_params['lon_range'] parameter
+    - the origin (the first longitude value) is changed to the closest 
+      lon value to subset_params['lon_origin'], if using a 0:360 range. 
+      In other words, the range becomes [lon_origin:360 0:lon_origin]. 
+      This is to make sure the subsetting occurs in the 'right' direction, 
+      with the longitude indices increasing consecutively (this is to ensure
+      that subsetting to, say, [45, 275] doesn't subset to [275, 45] or vice-
+      versa). Set lon_origin to a longitude value lower than your first subset 
+      value.
+    """
+    
+    if lon_range==180:
+        # Switch to -180:180 longitude if necessary
+        if any (ds.lon>180):
+            ds = ds.assign_coords(lon=(((ds.lon + 180) % 360) - 180))
+        # Change origin to half the world over, to allow for the 
+        # longitude indexing to cross the prime meridian, but only
+        # if the first lon isn't around -180 (using 5deg as an approx
+        # biggest grid spacing). This is intended to move [0:180 -180:0]
+        # to [-180:0:180].
+        if ds.lon[0] > -175:
+            ds = ds.roll(lon=(ds.sizes['lon'] // 2),roll_coords=True)
+    elif lon_range==360:
+        # Switch to 0:360 longitude if necessary
+        ds = ds.assign_coords(lon = ds.lon % 360)
+        # Change origin to the lon_origin
+        ds = ds.roll(lon=-((ds.lon // subset_params['lon_origin'])==1).values.nonzero()[0][0],roll_coords=True)
+    return ds
 
 def spi(ds):
     '''
