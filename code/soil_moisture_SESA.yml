@@ -15,7 +15,7 @@ dependencies:
 
   ## download data 
   - intake
-  - intake_esm
+  #- intake_esm
   - gcsfs
 
   ## missing intake dependencies?
