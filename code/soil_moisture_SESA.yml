@@ -30,6 +30,7 @@ dependencies:
   - shapely
   - geopandas
   - regionmask
+  - nc-time-axis    # required for xarray's plotting
 
   # Aux
   - jupyterlab
