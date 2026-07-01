@@ -199,3 +199,57 @@ def spi(ds):
     '''
 
     return ds
+
+
+def GWL_crossing(ds, model):
+    '''
+    Return dataset with coordinate for Global Warming Level
+    Requires [TK GWL dataset]
+    '''
+
+    return ds
+
+
+
+def standardized_monthly_anomaly(ds, REF_start='1981', REF_end='2010'):
+    '''
+    Calculate monthlly zscore or standardized anomaly for an 
+    entire xarray dataset. This operation will be performed 
+    on all data variables in the dataset.
+    
+    Returns dataset of same shape but with all variables processed.
+    
+    'wild pixels' e.g. data that approaches infinity due to the likelihood
+    of divide by 0 errors is removed. This is set as values greater than or less 
+    than 20 on either side of the mean. 
+    '''
+    
+    ### Choose your baseline, we used the 20-year baseline to align with length of 
+    ### Global warming level threshold crossing times as used in the  
+    ### IPCC's Working Group 1 Sixth Assessment Reprort
+
+
+    ### TODO: add a check that REF_years are strings
+
+    baseline = ds.sel(time = slice(REF_start, REF_end))
+    
+    climatology_mean = baseline.groupby("time.month").mean(dim = "time")
+    climatology_std = baseline.groupby("time.month").std(dim = "time")
+
+    stand_anomaly = xr.apply_ufunc(
+            lambda x, m, s: (x - m) / s,
+            ds.groupby("time.month"),
+            climatology_mean,
+            climatology_std, keep_attrs = True
+        )
+    
+    ## remove wild pixels
+    ## this removes any pixels that have an anomaly of less than -20
+    ## fills pixels that don't meet criteria with NaNs
+    clean_anomaly = stand_anomaly.where(stand_anomaly >= -20)
+    
+    ## also remove pixels that have an anomaly greater then +20
+    clean_anomaly =  clean_anomaly.where(stand_anomaly <= 20)
+
+    
+    return clean_anomaly
