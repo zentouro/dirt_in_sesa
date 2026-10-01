@@ -4,6 +4,9 @@ import numpy as np
 import os
 import warnings
 
+import config as cfg
+
+
 
 def earth_radius(lat):
     '''
@@ -201,13 +204,19 @@ def spi(ds):
     return ds
 
 
-def GWL_crossing(ds, model):
+def GWL_crossing():
     '''
-    Return dataset with coordinate for Global Warming Level
-    Requires [TK GWL dataset]
+    Return pandas dataframe with:
+         start and end years for each global warming level 
+         for all CMIP6 models and SSP
+    Requires [GWL-crossing_times.csv]
     '''
-
-    return ds
+    
+    GWL_xtimes = pd.read_csv(f"{cfg.lpaths['data_dir']}GWL-crossing_times.csv")
+    GWL_xtimes['start_year'] = pd.to_datetime(GWL_xtimes['start_year'], format='%Y')
+    GWL_xtimes['end_year'] = pd.to_datetime(GWL_xtimes['end_year'], format='%Y')
+    
+    return GWL_xtimes
 
 
 
